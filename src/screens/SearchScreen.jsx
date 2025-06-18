@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 
-const ApiPage = () => {
+const SearchScreen = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -71,4 +71,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ApiPage;
+export default SearchScreen;
