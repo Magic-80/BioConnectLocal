@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ActivityIndicator, 
-  Alert, 
-  Modal, 
-  TextInput, 
-  FlatList, 
-  TouchableOpacity 
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+  Modal,
+  TextInput,
+  FlatList,
+  TouchableOpacity
 } from 'react-native';
 import axios from 'axios';
 import { LeafletView } from 'react-native-leaflet-view';
 import OperateurCard from '../components/OperateurCard';
+import SearchSvg from '../assets/images/search';
 
 let defaultLocation = {
   lat: 48.8566,
@@ -26,15 +27,13 @@ const SearchScreen = () => {
   const [error, setError] = useState<any>(null);
   const [editVisibility, setEditVisibility] = useState(false);
   const [selectedOperateur, setSelectedOperateur] = useState<any>(null);
-  
-  // Nouveaux états pour la recherche
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchOperateurs = async () => {
       try {
         setLoading(true);
-        
+
         const response = await axios.get('https://opendata.agencebio.org/api/gouv/operateurs', {
           params: {
             q: searchQuery || 'boulangerie',
@@ -46,6 +45,7 @@ const SearchScreen = () => {
         const operateurs = response.data?.items || [];
         setOperateurs(operateurs);
         setLoading(false);
+
       } catch (error) {
         console.error('Erreur API:', error);
         setError(error);
@@ -53,14 +53,13 @@ const SearchScreen = () => {
       }
     };
 
-    // Ajoute un délai pour éviter trop d'appels API
     const timeoutId = setTimeout(() => {
       fetchOperateurs();
     }, 500);
 
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
-  
+
   useEffect(() => {
     if (operateurs.length > 0) {
       initMakers();
@@ -89,7 +88,7 @@ const SearchScreen = () => {
 
   const handleMap = (message: any) => {
     if (message.event === 'onMapMarkerClicked') {
-       const operateur = operateurs.find((operateur, index) => `${operateur.numeroBio}-${index}` === message.payload.mapMarkerID);
+      const operateur = operateurs.find((operateur, index) => `${operateur.numeroBio}-${index}` === message.payload.mapMarkerID);
       if (operateur) {
         handleEdit(operateur);
       }
@@ -110,7 +109,7 @@ const SearchScreen = () => {
       return (
         <View style={[styles.contentContainer, styles.centered]}>
           <Text style={styles.errorText}>Erreur de chargement</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.retryButton}
             onPress={() => window.location.reload()}
           >
@@ -127,7 +126,6 @@ const SearchScreen = () => {
           mapMarkers={marker}
           doDebug={false}
           onMessageReceived={handleMap}
-          style={styles.map}
         />
       );
     }
@@ -153,7 +151,7 @@ const SearchScreen = () => {
             <TouchableOpacity onPress={() => handleEdit(item)}>
               <OperateurCard
                 operateur={operateurData}
-                onDelete={() => {}}
+                onDelete={() => { }}
               />
             </TouchableOpacity>
           );
@@ -176,26 +174,28 @@ const SearchScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Barre de recherche - TOUJOURS VISIBLE */}
       <View style={styles.searchContainer}>
-        <TextInput
-          placeholder="Rechercher un opérateur, une ville, un produit..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          style={styles.searchInput}
-          returnKeyType="search"
-        />
+        <View style={styles.searchInputWrapper}>
+          <SearchSvg fill={"#7CB342"}></SearchSvg>
+          <TextInput
+            placeholder="Rechercher un opérateur, une ville, un produit..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            style={styles.searchInput}
+            returnKeyType="search"
+            placeholderTextColor="#7CB342"
+          />
+        </View>
+
         <Text style={styles.resultCount}>
           {operateurs.length} opérateur{operateurs.length > 1 ? 's' : ''} trouvé{operateurs.length > 1 ? 's' : ''}
         </Text>
       </View>
 
-      {/* Contenu principal */}
       <View style={styles.contentContainer}>
         {renderContent()}
       </View>
 
-      {/* Modal pour les détails */}
       <Modal
         visible={editVisibility}
         transparent={true}
@@ -207,7 +207,7 @@ const SearchScreen = () => {
             <Text style={styles.modalTitle}>
               {selectedOperateur?.raisonSociale || selectedOperateur?.denominationcourante || 'Opérateur'}
             </Text>
-            
+
             <Text style={styles.modalLabel}>Numéro Bio:</Text>
             <Text style={styles.modalText}>
               {selectedOperateur?.numeroBio || 'Non spécifié'}
@@ -231,8 +231,8 @@ const SearchScreen = () => {
                 return `${adresse.lieu || ''} ${adresse.codePostal || ''} ${adresse.ville || ''}`.trim();
               })()}
             </Text>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setEditVisibility(false)}
             >
@@ -251,30 +251,42 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   searchContainer: {
-    padding: 12,
-    backgroundColor: '#fff',
+    padding: 16,
+    backgroundColor: '#ffffff',
     borderBottomWidth: 1,
-    borderBottomColor: '#E8F5E8',
-    elevation: 2,
+    borderBottomColor: '#DDEEDD',
+    elevation: 3,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
   },
-  searchInput: {
-    backgroundColor: '#F1F8E9',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
+
+  searchInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F4FAF4',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderWidth: 1,
-    borderColor: '#E8F5E8',
+    borderColor: '#CFE9CF',
   },
+
+  searchIcon: {
+    marginRight: 8,
+  },
+
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: '#2E7D32',
+  },
+
   resultCount: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
-    textAlign: 'center',
+    marginTop: 8,
+    fontSize: 14,
+    color: '#4CAF50',
   },
   contentContainer: {
     flex: 1,
