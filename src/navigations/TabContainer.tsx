@@ -5,6 +5,7 @@ import SearchScreen from '../screens/SearchScreen';
 import FavoriteScreen from '../screens/FavoriteScreen';
 import HomeSvg from '../assets/images/home';
 import SearchSvg from '../assets/images/search';
+import FavoriteSvg from '../assets/images/favorite';
 
 
 const Tab = createBottomTabNavigator();
@@ -12,8 +13,7 @@ const Tab = createBottomTabNavigator();
 const TabContainer = () => {
   return (
     <Tab.Navigator
-<<<<<<< HEAD
-     screenOptions={{
+      screenOptions={{
         tabBarActiveTintColor: '#fff',
         tabBarInactiveTintColor: '#888',
         tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
@@ -22,17 +22,15 @@ const TabContainer = () => {
           height: 65,
         },
       }}
-=======
       screenOptions={({ route }) => ({
         tabBarActiveTintColor: '#2E7D32',
         tabBarInactiveTintColor: 'gray',
         headerShown: false,
       })}
->>>>>>> df342f9c12158e639767a68b835f52fe8ef3583b
     >
-      <Tab.Screen name="Accueil" component={Home} options={{ tabBarIcon: () => <HomeSvg ></HomeSvg> }}/>
-      <Tab.Screen name="Rechercher" component={SearchScreen} options={{ tabBarIcon: () => <SearchSvg></SearchSvg> }}/>
-      <Tab.Screen name="Favoris" component={FavoriteScreen} />
+      <Tab.Screen name="Accueil" component={Home} options={{ tabBarIcon: () => <HomeSvg ></HomeSvg> }} />
+      <Tab.Screen name="Rechercher" component={SearchScreen} options={{ tabBarIcon: () => <SearchSvg></SearchSvg> }} />
+      <Tab.Screen name="Favoris" component={FavoriteScreen} options={{ tabBarIcon: () => <FavoriteSvg></FavoriteSvg> }} />
 
     </Tab.Navigator>
   );
