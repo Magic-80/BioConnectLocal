@@ -1,10 +1,3 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
 import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import SplashScreen from './src/screens/SplashScreen';
@@ -12,6 +5,7 @@ import Accueil from './src/screens/Accueil';
 import ApiPage from './src/screens/SearchScreen.jsx';
 import AffichageDonnees from './src/screens/AffichageDonnees';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import DrawerNavigator from './src/navigations/DrawerNavigator.tsx';
 
 
 const Tab = createBottomTabNavigator();
@@ -31,27 +25,7 @@ function App() {
 
   return (
     <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          headerShown: false,
-          tabBarActiveTintColor: 'red',
-          tabBarInactiveTintColor: 'gray',
-          tabBarStyle: {
-            backgroundColor: '#2E7D32',
-            borderTopWidth: 0,
-            paddingTop: 15,
-            height: 100,
-          },
-
-        })}
-      >
-        <Tab.Screen name="Accueil" component={Accueil}
-          options={{
-            title: 'Accueil',
-          }} />
-        <Tab.Screen name="Recherche" component={ApiPage} />
-        <Tab.Screen name="Favorie" component={AffichageDonnees} />
-      </Tab.Navigator>
+      <DrawerNavigator></DrawerNavigator>
     </NavigationContainer>
   );
 }
