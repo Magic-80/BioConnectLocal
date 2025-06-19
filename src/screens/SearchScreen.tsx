@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Alert , Modal} from 'react-native';
 import axios from 'axios';
 import { LeafletView } from 'react-native-leaflet-view';
 
+let defaultLocation = {
+  lat: 48.8566,
+  lng: 2.3522,
+};
+
 const SearchScreen = () => {
-  const [data, setData] = useState([]);
+  const [operateurs, setOperateurs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [marker, setMarker] = useState([]);
   const [error, setError] = useState(null);
+  const [editVisibility , setEditVisibility] = useState(false);
 
   useEffect(() => {
     const fetchOperateurs = async () => {
@@ -21,7 +28,14 @@ const SearchScreen = () => {
         });
 
         const operateurs = response.data?.items || [];
-        setData(operateurs);
+        setOperateurs(operateurs);
+
+        const a = operateurs.map(operateur => {
+          console.log(operateur.productions[0]);
+
+        })
+
+
         setLoading(false);
       } catch (error) {
         setError(error);
@@ -31,6 +45,45 @@ const SearchScreen = () => {
 
     fetchOperateurs();
   }, []);
+
+  useEffect(() => {
+    if (operateurs.length > 0) {
+      initMakers();
+    }
+  }, [operateurs]);
+
+  const initMakers = () => {
+    const initialMakers = operateurs.filter(item =>
+      item.adressesOperateurs?.[0]?.lat &&
+      item.adressesOperateurs?.[0]?.long
+    )
+      .map((item, index) => ({
+        id: `${item.numeroBio}-${index}`,
+        position: { lat: item.adressesOperateurs[0].lat, lng: item.adressesOperateurs[0].long },
+        icon: 'https://cdn-icons-png.flaticon.com/64/2776/2776067.png',
+        title: item.productions[0].nom || 'Activiter',
+      }));
+
+    console.log(initialMakers);
+
+    setMarker(initialMakers);
+    ;
+  };
+
+  const handleEdit = (data : []) => {
+    setOperateurs(data);
+    setEditVisibility(true);
+  };
+
+  const handleMap = (message: any) => {
+    if (message?.event === 'onMapMarkerClicked') {
+      const datas = operateurs.find((item, index) => `${item.numeroBio}-${index}` === message.payload.mapMarkerID);
+      if (datas) {
+        handleEdit(datas);
+      }
+    }
+  };
+
 
   if (loading) {
     return (
@@ -51,31 +104,17 @@ const SearchScreen = () => {
   }
 
 
-  const markers = data
-    .filter(item =>
-      item.adressesOperateurs?.[0]?.lat &&
-      item.adressesOperateurs?.[0]?.long
-    )
-    .map((item, index) => ({
-      id: `${item.numeroBio}-${index}`,
-      position: [
-        item.adressesOperateurs[0].lat,
-        item.adressesOperateurs[0].long,
-      ],
-      title: item.denominationcourante || 'Opérateur BIO',
-    }));
-
-    console.log(markers);
-    
-
   return (
     <View style={styles.container}>
       <LeafletView
-        mapCenterPosition={{ lat: 48.8566, lng: 2.3522 }}
-        zoom={12}
-        markers={markers}
-      style={{ width: '100%', height: '100%' }}
+        mapCenterPosition={defaultLocation}
+        mapMarkers={marker}
+        doDebug={false}
+        onMessageReceived={handleMap}
+        style={{ width: '100%', height: '100%' }}
       />
+
+      <Modal visible={editVisibility}>  <Text> bonjour </Text> </Modal>
     </View>
   );
 };
