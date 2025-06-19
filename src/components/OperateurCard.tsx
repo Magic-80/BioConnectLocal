@@ -1,9 +1,11 @@
 // components/OperateurCard.js
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import DetailsOperator from './DetailsOperator';
 
 const OperateurCard = ({ operateur, onDelete }) => {
   const scaleAnim = new Animated.Value(1);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const onPressIn = () => {
     Animated.spring(scaleAnim, {
@@ -50,7 +52,13 @@ const OperateurCard = ({ operateur, onDelete }) => {
         activeOpacity={0.9}
         onPressIn={onPressIn}
         onPressOut={onPressOut}
+        onPress={() => setModalVisible(true)}
       >
+        <DetailsOperator
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          operateur={operateur}
+        />
         <View style={styles.cardHeader}>
           <View style={styles.iconContainer}>
             <Text style={styles.activityIcon}>
