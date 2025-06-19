@@ -37,7 +37,7 @@ const SearchScreen = () => {
         const response = await axios.get('https://opendata.agencebio.org/api/gouv/operateurs', {
           params: {
             q: searchQuery || 'boulangerie',
-            nb: 500,
+            nb: 300,
             debut: 0
           }
         });
@@ -55,7 +55,7 @@ const SearchScreen = () => {
 
     const timeoutId = setTimeout(() => {
       fetchOperateurs();
-    }, 500);
+    }, 200);
 
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
@@ -64,7 +64,7 @@ const SearchScreen = () => {
     if (operateurs.length > 0) {
       initMakers();
     }
-  }, [operateurs]);
+  }, []);
 
   const initMakers = () => {
     const initialMakers = operateurs.filter(item =>
@@ -86,7 +86,7 @@ const SearchScreen = () => {
     setEditVisibility(true);
   };
 
-  const handleMap = (message: any) => {
+  const handleMarker = (message: any) => {
     if (message.event === 'onMapMarkerClicked') {
       const operateur = operateurs.find((operateur, index) => `${operateur.numeroBio}-${index}` === message.payload.mapMarkerID);
       if (operateur) {
@@ -125,7 +125,8 @@ const SearchScreen = () => {
           mapCenterPosition={defaultLocation}
           mapMarkers={marker}
           doDebug={false}
-          onMessageReceived={handleMap}
+          zoom={5}
+          onMessageReceived={handleMarker}
         />
       );
     }
