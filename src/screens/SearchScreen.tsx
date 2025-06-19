@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert , Modal} from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Alert, Modal, Pressable } from 'react-native';
 import axios from 'axios';
 import { LeafletView } from 'react-native-leaflet-view';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 let defaultLocation = {
   lat: 48.8566,
@@ -13,7 +14,7 @@ const SearchScreen = () => {
   const [loading, setLoading] = useState(true);
   const [marker, setMarker] = useState([]);
   const [error, setError] = useState(null);
-  const [editVisibility , setEditVisibility] = useState(false);
+  const [editVisibility, setEditVisibility] = useState(false);
 
   useEffect(() => {
     const fetchOperateurs = async () => {
@@ -21,9 +22,8 @@ const SearchScreen = () => {
         const response = await axios.get('https://opendata.agencebio.org/api/gouv/operateurs', {
           params: {
             q: 'boulangerie',
-            departement: '75',
             page: 1,
-            page_size: 20
+            page_size: 50
           }
         });
 
@@ -61,7 +61,7 @@ const SearchScreen = () => {
         id: `${item.numeroBio}-${index}`,
         position: { lat: item.adressesOperateurs[0].lat, lng: item.adressesOperateurs[0].long },
         icon: 'https://cdn-icons-png.flaticon.com/64/2776/2776067.png',
-        title: item.productions[0].nom || 'Activiter',
+        title: item.productions[0].nom || 'Productions',
       }));
 
     console.log(initialMakers);
@@ -70,16 +70,16 @@ const SearchScreen = () => {
     ;
   };
 
-  const handleEdit = (data : []) => {
-    setOperateurs(data);
+  const handleEdit = (operateur: []) => {
+    setOperateurs(operateur);
     setEditVisibility(true);
   };
 
   const handleMap = (message: any) => {
     if (message?.event === 'onMapMarkerClicked') {
-      const datas = operateurs.find((item, index) => `${item.numeroBio}-${index}` === message.payload.mapMarkerID);
-      if (datas) {
-        handleEdit(datas);
+      const operateur = operateurs.find((operateur, index) => `${operateur.numeroBio}-${index}` === message.payload.mapMarkerID);
+      if (operateur) {
+        handleEdit(operateur);
       }
     }
   };
@@ -110,11 +110,31 @@ const SearchScreen = () => {
         mapCenterPosition={defaultLocation}
         mapMarkers={marker}
         doDebug={false}
+        zoom={5}
         onMessageReceived={handleMap}
         style={{ width: '100%', height: '100%' }}
       />
 
-      <Modal visible={editVisibility}>  <Text> bonjour </Text> </Modal>
+      <SafeAreaView style={styles.centeredView}>
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={editVisibility}
+          onRequestClose={() => {
+            setEditVisibility(!editVisibility);
+          }}>
+          <View style={styles.centeredView}>
+            <View style={styles.modalView}>
+              <Pressable style={styles.closeButton} onPress={() => setEditVisibility(false)}>
+                <Text style={styles.closeText}>×</Text>
+              </Pressable>
+              <Text>Hello World!</Text>
+            </View>
+          </View>
+        </Modal>
+      </SafeAreaView>
+
+
     </View>
   );
 };
@@ -122,7 +142,24 @@ const SearchScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 0,
+  },
+  centeredView: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  },
+  modalView: {
+    borderRadius: 20,
+    padding: 35,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    width: '80%', 
+    maxWidth: 400,
   },
 });
 
