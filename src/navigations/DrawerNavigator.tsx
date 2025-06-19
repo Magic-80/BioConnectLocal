@@ -8,7 +8,10 @@ const Drawer = createDrawerNavigator();
 
 const DrawerNavigator = () => {
   return (
-    <Drawer.Navigator drawerContent={(props) => <DrawerContent {...props} />}>
+    <Drawer.Navigator
+      screenOptions={{ headerShown: false }}
+      drawerContent={props => <DrawerContent {...props} />}
+    >
       <Drawer.Screen name="BioConnect" component={TabContainer} />
       {/* <Drawer.Screen name="Autre Page" component={SomeOtherPage} /> */}
     </Drawer.Navigator>

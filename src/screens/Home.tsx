@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 
-const Accueil = ({ navigation }) => {
+const Home = ({ navigation }) => {
   return (
     <View style={styles.container}>
     
@@ -79,4 +79,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Accueil;
+export default Home;

@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, Button, FlatList, TextInput, Alert, TouchableOpacity } from 'react-native';
-import { addDataItem, getItems, deleteItem, clearAllItems } from '../src/services/migrations/index.js';
+import { addDataItem, getItems, deleteItem, clearAllItems } from '../services/migrations/index';
 
-const AffichageDonnees = () => {
+const FavoriteScreen = () => {
   const [itemName, setItemName] = useState('');
   const [itemQuantity, setItemQuantity] = useState('');
   const [items, setItems] = useState([]);
 
-  // Fonction pour charger les données depuis la DB
   const loadItems = useCallback(async () => {
     try {
       const storedItems = await getItems();
@@ -20,7 +19,7 @@ const AffichageDonnees = () => {
 
   useEffect(() => {
     loadItems();
-  }, [loadItems]); // Dépend de loadItems pour se recharger si loadItems change (peu probable ici)
+  }, [loadItems]); 
 
   const handleAddItem = async () => {
     if (!itemName || !itemQuantity) {
@@ -196,4 +195,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AffichageDonnees;
+export default FavoriteScreen;

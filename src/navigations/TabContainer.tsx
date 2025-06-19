@@ -1,7 +1,8 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Accueil from '../screens/Accueil';
+import Home from '../screens/Home';
 import SearchScreen from '../screens/SearchScreen';
+import FavoriteScreen from '../screens/FavoriteScreen';
 
 
 const Tab = createBottomTabNavigator();
@@ -14,8 +15,9 @@ const TabContainer = () => {
         tabBarInactiveTintColor: 'gray',
       })}
     >
-      <Tab.Screen name="Accueil" component={Accueil} />
+      <Tab.Screen name="Home" component={Home} />
       <Tab.Screen name="Rechercher" component={SearchScreen} />
+      <Tab.Screen name="Favoris" component={FavoriteScreen} />
     </Tab.Navigator>
   );
 };
