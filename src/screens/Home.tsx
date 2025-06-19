@@ -20,7 +20,7 @@ const Home = ({ navigation }) => {
 
       <TouchableOpacity
         style={styles.button}
-        onPress={() => navigation.navigate('Recherche')}
+        onPress={() => navigation.navigate('Rechercher')}
       >
         <Text style={styles.buttonText}>Découvrir les opérateurs près de moi</Text>
       </TouchableOpacity>

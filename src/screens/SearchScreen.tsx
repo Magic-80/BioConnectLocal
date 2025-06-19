@@ -1,28 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import axios from 'axios';
+import { LeafletView } from 'react-native-leaflet-view';
 
 const SearchScreen = () => {
-  const [data, setData] = useState(null);
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchOperateurs = async () => {
       try {
-        const response = await fetch('https://jsonplaceholder.typicode.com/todos/1');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const json = await response.json();
-        setData(json);
+        const response = await axios.get('https://opendata.agencebio.org/api/gouv/operateurs', {
+          params: {
+            q: 'boulangerie',
+            departement: '75',
+            page: 1,
+            page_size: 20
+          }
+        });
+
+        const operateurs = response.data?.items || [];
+        setData(operateurs);
         setLoading(false);
-      } catch (e) {
-        setError(e);
+      } catch (error) {
+        setError(error);
         setLoading(false);
       }
     };
 
-    fetchData();
+    fetchOperateurs();
   }, []);
 
   if (loading) {
@@ -43,16 +50,32 @@ const SearchScreen = () => {
     );
   }
 
+
+  const markers = data
+    .filter(item =>
+      item.adressesOperateurs?.[0]?.lat &&
+      item.adressesOperateurs?.[0]?.long
+    )
+    .map((item, index) => ({
+      id: `${item.numeroBio}-${index}`,
+      position: [
+        item.adressesOperateurs[0].lat,
+        item.adressesOperateurs[0].long,
+      ],
+      title: item.denominationcourante || 'Opérateur BIO',
+    }));
+
+    console.log(markers);
+    
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Données de l'API :</Text>
-      {data && (
-        <View>
-          <Text>ID: {data.id}</Text>
-          <Text>Titre: {data.title}</Text>
-          <Text>Terminé: {data.completed ? 'Oui' : 'Non'}</Text>
-        </View>
-      )}
+      <LeafletView
+        mapCenterPosition={{ lat: 48.8566, lng: 2.3522 }}
+        zoom={12}
+        markers={markers}
+      style={{ width: '100%', height: '100%' }}
+      />
     </View>
   );
 };
@@ -60,14 +83,7 @@ const SearchScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  title: {
-    fontSize: 20,
-    marginBottom: 10,
-    fontWeight: 'bold',
+    padding: 0,
   },
 });
 
