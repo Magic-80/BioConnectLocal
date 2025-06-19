@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import React, { useEffect } from 'react';
 import DrawerNavigator from './src/navigations/DrawerNavigator.tsx';
 import { closeDatabase, initDatabase } from './src/services/migrations/index.js';
+import AppNavigator from './src/navigations/AppNavigator.tsx';
 
 const Tab = createBottomTabNavigator();
 
@@ -22,7 +23,7 @@ function App() {
 
   return (
     <NavigationContainer>
-      <DrawerNavigator></DrawerNavigator>
+      <AppNavigator></AppNavigator>
     </NavigationContainer>
   );
 }

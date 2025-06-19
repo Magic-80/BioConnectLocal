@@ -1,37 +1,39 @@
 // screens/FavoriteScreen.js
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  FlatList, 
-  Alert, 
-  TouchableOpacity, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  Alert,
+  TouchableOpacity,
   RefreshControl,
-  StatusBar
+  StatusBar,
 } from 'react-native';
-import { getLikedOperateurs, unlikeOperateur, clearAllLikedOperateurs } from '../services/migrations/index';
+import {
+  getLikedOperateurs,
+  unlikeOperateur,
+  clearAllLikedOperateurs,
+} from '../services/migrations/index';
 import OperateurCard from '../components/OperateurCard';
 
 const FavoriteScreen = () => {
   const [operateurs, setOperateurs] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Fonction simple pour charger les opérateurs
   const loadOperateurs = async () => {
     try {
       const likedOperateurs = await getLikedOperateurs();
       setOperateurs(likedOperateurs);
     } catch (error) {
-      console.error("Erreur lors du chargement des opérateurs:", error);
-      Alert.alert("Erreur", "Impossible de charger les opérateurs favoris.");
+      console.error('Erreur lors du chargement des opérateurs:', error);
+      Alert.alert('Erreur', 'Impossible de charger les opérateurs favoris.');
     }
   };
 
-  // useEffect simple sans dépendances
   useEffect(() => {
     loadOperateurs();
-  }, []); // Tableau vide pour éviter les boucles
+  }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -39,61 +41,64 @@ const FavoriteScreen = () => {
     setRefreshing(false);
   };
 
-  const handleDeleteOperateur = (operateurId) => {
+  const handleDeleteOperateur = operateurId => {
     Alert.alert(
-      "Retirer des favoris",
-      "Voulez-vous retirer cet opérateur de vos favoris ?",
+      'Retirer des favoris',
+      'Voulez-vous retirer cet opérateur de vos favoris ?',
       [
-        { text: "Annuler", style: "cancel" },
+        { text: 'Annuler', style: 'cancel' },
         {
-          text: "Retirer",
+          text: 'Retirer',
           onPress: async () => {
             try {
               const success = await unlikeOperateur(operateurId);
               if (success) {
                 loadOperateurs();
               } else {
-                Alert.alert("Erreur", "Impossible de retirer cet opérateur des favoris.");
+                Alert.alert(
+                  'Erreur',
+                  'Impossible de retirer cet opérateur des favoris.',
+                );
               }
             } catch (error) {
-              console.error("Erreur lors de la suppression:", error);
-              Alert.alert("Erreur", "Une erreur est survenue lors de la suppression.");
+              console.error('Erreur lors de la suppression:', error);
+              Alert.alert(
+                'Erreur',
+                'Une erreur est survenue lors de la suppression.',
+              );
             }
           },
-          style: "destructive"
-        }
-      ]
+          style: 'destructive',
+        },
+      ],
     );
   };
 
   const handleClearAll = () => {
     Alert.alert(
-      "Vider tous les favoris",
-      "Êtes-vous sûr de vouloir retirer TOUS les opérateurs de vos favoris ?",
+      'Vider tous les favoris',
+      'Êtes-vous sûr de vouloir retirer TOUS les opérateurs de vos favoris ?',
       [
-        { text: "Annuler", style: "cancel" },
+        { text: 'Annuler', style: 'cancel' },
         {
-          text: "Tout vider",
+          text: 'Tout vider',
           onPress: async () => {
             try {
               await clearAllLikedOperateurs();
               loadOperateurs();
             } catch (error) {
-              console.error("Erreur lors du vidage:", error);
-              Alert.alert("Erreur", "Impossible de vider les favoris.");
+              console.error('Erreur lors du vidage:', error);
+              Alert.alert('Erreur', 'Impossible de vider les favoris.');
             }
           },
-          style: "destructive"
-        }
-      ]
+          style: 'destructive',
+        },
+      ],
     );
   };
 
   const renderItem = ({ item }) => (
-    <OperateurCard 
-      operateur={item} 
-      onDelete={handleDeleteOperateur}
-    />
+    <OperateurCard operateur={item} onDelete={handleDeleteOperateur} />
   );
 
   const EmptyComponent = () => (
@@ -101,7 +106,8 @@ const FavoriteScreen = () => {
       <Text style={styles.emptyIcon}>🌱💚</Text>
       <Text style={styles.emptyTitle}>Votre jardin de favoris est vide</Text>
       <Text style={styles.emptyText}>
-        Découvrez des opérateurs bio près de chez vous et ajoutez-les à vos favoris.
+        Découvrez des opérateurs bio près de chez vous et ajoutez-les à vos
+        favoris.
       </Text>
       <View style={styles.emptyHint}>
         <Text style={styles.emptyHintText}>
@@ -114,8 +120,7 @@ const FavoriteScreen = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#2E7D32" />
-      
-      {/* Header simplifié */}
+
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.headerEmoji}>💚</Text>
@@ -128,22 +133,20 @@ const FavoriteScreen = () => {
         </View>
       </View>
 
-      {/* Bouton clear si il y a des favoris */}
       {operateurs.length > 0 && (
         <TouchableOpacity style={styles.clearButton} onPress={handleClearAll}>
           <Text style={styles.clearButtonText}>🗑️ Vider mes favoris</Text>
         </TouchableOpacity>
       )}
 
-      {/* Liste */}
       <FlatList
         data={operateurs}
         renderItem={renderItem}
-        keyExtractor={(item) => `operateur-${item.operateur_id}`}
+        keyExtractor={item => `operateur-${item.operateur_id}`}
         contentContainerStyle={styles.listContainer}
         refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
+          <RefreshControl
+            refreshing={refreshing}
             onRefresh={onRefresh}
             colors={['#4CAF50']}
             tintColor={'#4CAF50'}
@@ -245,4 +248,3 @@ const styles = StyleSheet.create({
 });
 
 export default FavoriteScreen;
-

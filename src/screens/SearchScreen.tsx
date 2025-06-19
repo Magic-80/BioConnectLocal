@@ -64,7 +64,7 @@ const SearchScreen = () => {
     if (operateurs.length > 0) {
       initMakers();
     }
-  }, []);
+  }, [operateurs]);
 
   const initMakers = () => {
     const initialMakers = operateurs.filter(item =>
