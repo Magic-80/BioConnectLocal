@@ -8,7 +8,7 @@ import {
   Modal,
   TextInput,
   FlatList,
-  TouchableOpacity
+  TouchableOpacity,
 } from 'react-native';
 import axios from 'axios';
 import { LeafletView } from 'react-native-leaflet-view';
@@ -34,18 +34,20 @@ const SearchScreen = () => {
       try {
         setLoading(true);
 
-        const response = await axios.get('https://opendata.agencebio.org/api/gouv/operateurs', {
-          params: {
-            q: searchQuery || 'boulangerie',
-            nb: 300,
-            debut: 0
-          }
-        });
+        const response = await axios.get(
+          'https://opendata.agencebio.org/api/gouv/operateurs',
+          {
+            params: {
+              q: searchQuery || 'boulangerie',
+              nb: 300,
+              debut: 0,
+            },
+          },
+        );
 
         const operateurs = response.data?.items || [];
         setOperateurs(operateurs);
         setLoading(false);
-
       } catch (error) {
         console.error('Erreur API:', error);
         setError(error);
@@ -67,13 +69,18 @@ const SearchScreen = () => {
   }, [operateurs]);
 
   const initMakers = () => {
-    const initialMakers = operateurs.filter(item =>
-      item.adressesOperateurs?.[0]?.lat &&
-      item.adressesOperateurs?.[0]?.long
-    )
+    const initialMakers = operateurs
+      .filter(
+        item =>
+          item.adressesOperateurs?.[0]?.lat &&
+          item.adressesOperateurs?.[0]?.long,
+      )
       .map((item, index) => ({
         id: `${item.numeroBio}-${index}`,
-        position: { lat: item.adressesOperateurs[0].lat, lng: item.adressesOperateurs[0].long },
+        position: {
+          lat: item.adressesOperateurs[0].lat,
+          lng: item.adressesOperateurs[0].long,
+        },
         icon: 'https://cdn-icons-png.flaticon.com/64/2776/2776067.png',
       }));
 
@@ -87,7 +94,10 @@ const SearchScreen = () => {
 
   const handleMarker = (message: any) => {
     if (message.event === 'onMapMarkerClicked') {
-      const operateur = operateurs.find((operateur, index) => `${operateur.numeroBio}-${index}` === message.payload.mapMarkerID);
+      const operateur = operateurs.find(
+        (operateur, index) =>
+          `${operateur.numeroBio}-${index}` === message.payload.mapMarkerID,
+      );
       if (operateur) {
         handleEdit(operateur);
       }
@@ -137,22 +147,27 @@ const SearchScreen = () => {
         renderItem={({ item }) => {
           const operateurData = {
             operateur_id: item.numeroBio?.toString() || '',
-            nom: item.raisonSociale || item.denominationcourante || 'Nom non disponible',
-            domaine_activite: item.activites?.[0]?.nom || item.productions?.[0]?.nom || 'Activité non spécifiée',
+            nom:
+              item.raisonSociale ||
+              item.denominationcourante ||
+              'Nom non disponible',
+            domaine_activite:
+              item.activites?.[0]?.nom ||
+              item.productions?.[0]?.nom ||
+              'Activité non spécifiée',
             adresse: (() => {
               const adresse = item.adressesOperateurs?.[0];
               if (!adresse) return 'Adresse non disponible';
-              return `${adresse.lieu || ''} ${adresse.codePostal || ''} ${adresse.ville || ''}`.trim();
+              return `${adresse.lieu || ''} ${adresse.codePostal || ''} ${
+                adresse.ville || ''
+              }`.trim();
             })(),
             date_ajout: item.dateMaj || new Date().toISOString(),
           };
 
           return (
             <TouchableOpacity onPress={() => handleEdit(item)}>
-              <OperateurCard
-                operateur={operateurData}
-                onDelete={() => { }}
-              />
+              <OperateurCard operateur={operateurData} onDelete={() => {}} />
             </TouchableOpacity>
           );
         }}
@@ -176,7 +191,7 @@ const SearchScreen = () => {
     <View style={styles.container}>
       <View style={styles.searchContainer}>
         <View style={styles.searchInputWrapper}>
-          <SearchSvg fill={"#7CB342"}></SearchSvg>
+          <SearchSvg fill={'#7CB342'}></SearchSvg>
           <TextInput
             placeholder="Rechercher un opérateur, une ville, un produit..."
             value={searchQuery}
@@ -188,13 +203,12 @@ const SearchScreen = () => {
         </View>
 
         <Text style={styles.resultCount}>
-          {operateurs.length} opérateur{operateurs.length > 1 ? 's' : ''} trouvé{operateurs.length > 1 ? 's' : ''}
+          {operateurs.length} opérateur{operateurs.length > 1 ? 's' : ''} trouvé
+          {operateurs.length > 1 ? 's' : ''}
         </Text>
       </View>
 
-      <View style={styles.contentContainer}>
-        {renderContent()}
-      </View>
+      <View style={styles.contentContainer}>{renderContent()}</View>
 
       <Modal
         visible={editVisibility}
@@ -205,8 +219,18 @@ const SearchScreen = () => {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>
-              {selectedOperateur?.raisonSociale || selectedOperateur?.denominationcourante || 'Opérateur'}
+              {selectedOperateur?.raisonSociale ||
+                selectedOperateur?.denominationcourante ||
+                'Opérateur'}
             </Text>
+
+            <View style={styles.activitiesBadge}>
+              {selectedOperateur?.activites?.map((activite, index) => (
+                <Text key={index} style={styles.activitiesBadgeText}>
+                  {activite.nom}
+                </Text>
+              ))}
+            </View>
 
             <Text style={styles.modalLabel}>Numéro Bio:</Text>
             <Text style={styles.modalText}>
@@ -215,12 +239,16 @@ const SearchScreen = () => {
 
             <Text style={styles.modalLabel}>Activités:</Text>
             <Text style={styles.modalText}>
-              {selectedOperateur?.activites?.map((a: any) => a.nom).join(', ') || 'Non spécifié'}
+              {selectedOperateur?.activites
+                ?.map((a: any) => a.nom)
+                .join(', ') || 'Non spécifié'}
             </Text>
 
             <Text style={styles.modalLabel}>Productions:</Text>
             <Text style={styles.modalText}>
-              {selectedOperateur?.productions?.map((p: any) => p.nom).join(', ') || 'Non spécifié'}
+              {selectedOperateur?.productions
+                ?.map((p: any) => p.nom)
+                .join(', ') || 'Non spécifié'}
             </Text>
 
             <Text style={styles.modalLabel}>Adresse:</Text>
@@ -228,7 +256,9 @@ const SearchScreen = () => {
               {(() => {
                 const adresse = selectedOperateur?.adressesOperateurs?.[0];
                 if (!adresse) return 'Non spécifié';
-                return `${adresse.lieu || ''} ${adresse.codePostal || ''} ${adresse.ville || ''}`.trim();
+                return `${adresse.lieu || ''} ${adresse.codePostal || ''} ${
+                  adresse.ville || ''
+                }`.trim();
               })()}
             </Text>
 
@@ -349,43 +379,60 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 12,
-    width: '90%',
-    maxHeight: '80%',
+    padding: 24,
+    borderRadius: 20,
+    width: '92%',
+    maxHeight: '85%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 10,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
+    fontSize: 22,
+    fontWeight: '700',
     color: '#2E7D32',
+    marginBottom: 16,
     textAlign: 'center',
   },
-  modalLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginTop: 12,
+  activitiesBadge: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+  },
+  activitiesBadgeText: {
+    backgroundColor: '#C8E6C9',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    fontSize: 12,
+    color: '#2E7D32',
+    marginRight: 4,
     marginBottom: 4,
-    color: '#4CAF50',
+  },
+  modalLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#558B2F',
+    marginTop: 12,
   },
   modalText: {
     fontSize: 14,
-    marginBottom: 8,
-    color: '#666',
+    color: '#444',
     lineHeight: 20,
   },
   closeButton: {
-    backgroundColor: '#4CAF50',
-    paddingHorizontal: 20,
+    backgroundColor: '#81C784',
     paddingVertical: 12,
     borderRadius: 8,
+    marginTop: 24,
     alignItems: 'center',
-    marginTop: 20,
   },
   closeButtonText: {
     color: '#fff',
-    fontSize: 16,
     fontWeight: 'bold',
+    fontSize: 16,
   },
 });
 
