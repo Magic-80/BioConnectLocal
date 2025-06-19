@@ -77,7 +77,6 @@ const SearchScreen = () => {
         icon: 'https://cdn-icons-png.flaticon.com/64/2776/2776067.png',
       }));
 
-    console.log('Markers:', initialMakers);
     setMarker(initialMakers);
   };
 
@@ -138,7 +137,7 @@ const SearchScreen = () => {
         renderItem={({ item }) => {
           const operateurData = {
             operateur_id: item.numeroBio?.toString() || '',
-            name: item.raisonSociale || item.denominationcourante || 'Nom non disponible',
+            nom: item.raisonSociale || item.denominationcourante || 'Nom non disponible',
             domaine_activite: item.activites?.[0]?.nom || item.productions?.[0]?.nom || 'Activité non spécifiée',
             adresse: (() => {
               const adresse = item.adressesOperateurs?.[0];

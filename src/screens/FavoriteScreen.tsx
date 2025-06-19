@@ -23,7 +23,7 @@ const FavoriteScreen = () => {
 
   const loadOperateurs = async () => {
     try {
-      const likedOperateurs = await getLikedOperateurs();
+      const likedOperateurs = await getLikedOperateurs(); 
       setOperateurs(likedOperateurs);
     } catch (error) {
       console.error('Erreur lors du chargement des opérateurs:', error);
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#4CAF50',
-    paddingTop: 50,
+    paddingTop: 20,
     paddingBottom: 20,
     paddingHorizontal: 20,
   },
