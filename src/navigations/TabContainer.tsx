@@ -12,6 +12,7 @@ const Tab = createBottomTabNavigator();
 const TabContainer = () => {
   return (
     <Tab.Navigator
+<<<<<<< HEAD
      screenOptions={{
         tabBarActiveTintColor: '#fff',
         tabBarInactiveTintColor: '#888',
@@ -21,6 +22,13 @@ const TabContainer = () => {
           height: 65,
         },
       }}
+=======
+      screenOptions={({ route }) => ({
+        tabBarActiveTintColor: '#2E7D32',
+        tabBarInactiveTintColor: 'gray',
+        headerShown: false,
+      })}
+>>>>>>> df342f9c12158e639767a68b835f52fe8ef3583b
     >
       <Tab.Screen name="Accueil" component={Home} options={{ tabBarIcon: () => <HomeSvg ></HomeSvg> }}/>
       <Tab.Screen name="Rechercher" component={SearchScreen} options={{ tabBarIcon: () => <SearchSvg></SearchSvg> }}/>

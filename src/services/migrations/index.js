@@ -1,32 +1,34 @@
 import { Alert } from 'react-native';
-import SQLite from 'react-native-sqlite-storage'; // Utiliser SQLite directement, pas "openDatabase as openSQLiteDatabase"
+import SQLite from 'react-native-sqlite-storage';
 
 const DATABASE_NAME = "ReactNativetest.db";
-const DATABASE_VERSION = 1; // La version actuelle attendue par le code (entier)
+const DATABASE_VERSION = 1;
 const DATABASE_DISPLAYNAME = "React Native Test Database";
 const DATABASE_SIZE = 200000;
 
 // Schéma initial (Version 0)
-const v0Schema = `
-    CREATE TABLE IF NOT EXISTS items(id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(20), quantity INTEGER);
-    INSERT INTO items (name, quantity) VALUES ('Pomme', 10);
-    INSERT INTO items (name, quantity) VALUES ('Banane', 15);
-    INSERT INTO items (name, quantity) VALUES ('Orange', 8);
-`;
+const v0Schema = [
+    `CREATE TABLE IF NOT EXISTS OperateurLiked (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        operateur_id INTEGER NOT NULL UNIQUE,
+        nom TEXT NOT NULL,
+        adresse TEXT,
+        domaine_activite TEXT,
+        date_ajout DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `INSERT OR IGNORE INTO OperateurLiked (operateur_id, nom, adresse, domaine_activite) 
+     VALUES (1, 'BioFerme', '123 rue de la Bio, Paris 75001', 'Maraîchage')`,
+    `INSERT OR IGNORE INTO OperateurLiked (operateur_id, nom, adresse, domaine_activite) 
+     VALUES (2, 'Les Vergers du Sud', '45 avenue des Fruits, Marseille 13001', 'Arboriculture')`,
+    `INSERT OR IGNORE INTO OperateurLiked (operateur_id, nom, adresse, domaine_activite) 
+     VALUES (3, 'Céréales & Co', '78 route des Champs, Lyon 69001', 'Céréaliculture')`
+];
 
 const migrationScripts = {
-    // Les scripts à exécuter pour passer d'une version N à N+1
-    // La clé est la version À PARTIR DE LAQUELLE on migre
-    0: `
-        ALTER TABLE items ADD COLUMN description VARCHAR(100) DEFAULT '';
-        UPDATE items SET description = 'Fruit frais et croquant' WHERE name = 'Pomme';
-        UPDATE items SET description = 'Source d''énergie' WHERE name = 'Banane';
-        UPDATE items SET description = 'Riche en vitamine C' WHERE name = 'Orange';
-        `, // Ce script migre de la version 0 à la version 1
-    1: `
-        `, // Ce script migre de la version 1 à la version 2 en ne faisant rien à la base de données
+    0: [
+        // Migrations futures si nécessaire
+    ],
 };
-
 
 let db = null;
 
@@ -34,11 +36,10 @@ export const initDatabase = async () => {
     return new Promise((resolve, reject) => {
         SQLite.openDatabase(
             { name: DATABASE_NAME, location: 'default' },
-            async (openedDb) => {
+            (openedDb) => {
                 db = openedDb;
                 console.log("Database opened successfully.");
-                await performMigrations();
-                resolve();
+                performMigrations(resolve, reject);
             },
             error => {
                 console.error("Error opening database: ", error);
@@ -48,113 +49,147 @@ export const initDatabase = async () => {
     });
 };
 
-const performMigrations = async () => {
+const performMigrations = (resolve, reject) => {
     if (!db) {
         console.error("Database not open for migration!");
+        reject(new Error("Database not open"));
         return;
     }
 
-    try {
-        await db.transaction(async (txn) => {
+    db.transaction(
+        (txn) => {
             // Créer la table de migrations si elle n'existe pas
-            await txn.executeSql(
-                "CREATE TABLE IF NOT EXISTS _migrations (version INTEGER PRIMARY KEY, applied_at DATETIME DEFAULT CURRENT_TIMESTAMP);"
-            );
+            txn.executeSql(
+                "CREATE TABLE IF NOT EXISTS _migrations (version INTEGER PRIMARY KEY, applied_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+                [],
+                () => {
+                    console.log("Migration table created/verified");
+                    
+                    // Vérifier la version actuelle
+                    txn.executeSql(
+                        "SELECT version FROM _migrations ORDER BY version DESC LIMIT 1",
+                        [],
+                        (txn, results) => {
+                            let currentDbVersion = 0;
+                            if (results.rows.length > 0) {
+                                currentDbVersion = results.rows.item(0).version;
+                            }
+                            
+                            console.log(`Current database version: ${currentDbVersion}`);
+                            console.log(`Target database version: ${DATABASE_VERSION}`);
 
-            let currentDbVersion = 0;
-            try {
-                const [_, results] = await txn.executeSql("SELECT version FROM _migrations ORDER BY version DESC LIMIT 1;", []);
-                if (results.rows.length > 0) {
-                    currentDbVersion = results.rows.item(0).version;
-                }
-            } catch (e) {
-                // Cette erreur peut se produire si la table _migrations vient d'être créée mais n'a pas encore d'entrées
-                console.warn("Could not read migration table (maybe new DB?), assuming version 0.", e);
-                currentDbVersion = 0;
-            }
-            
-            console.log(`Current database version: ${currentDbVersion}`);
-            console.log(`Target database version: ${DATABASE_VERSION}`);
-
-
-            // Si la base est neuve (version 0 n'a pas été appliquée), appliquer le schéma initial
-            // Cette condition est cruciale pour le premier lancement de l'application
-            if (currentDbVersion === 0) {
-                console.log("Database is new or at version 0. Applying initial schema (v0)...");
-                const statements = v0Schema.split(';').filter(s => s.trim().length > 0);
-                for (const statement of statements) {
-                    try {
-                        await txn.executeSql(statement, []);
-                    } catch (e) {
-                        console.error(`Error executing initial schema statement: ${statement}`, e);
-                        throw e; // Important pour annuler la transaction si la création échoue
-                    }
-                }
-                // Enregistrer que la version 0 a été appliquée
-                await txn.executeSql("INSERT INTO _migrations (version) VALUES (0);");
-                currentDbVersion = 0; // Confirmer que la DB est maintenant à la version 0
-                console.log("Initial schema (v0) applied successfully.");
-            }
-
-            // Appliquer les migrations incrémentales jusqu'à la version cible
-            while (currentDbVersion < DATABASE_VERSION) {
-                const nextVersionToApply = currentDbVersion + 1; // La version vers laquelle on migre
-                const migrationScript = migrationScripts[currentDbVersion]; // Le script pour passer de currentDbVersion à nextVersionToApply
-
-                if (migrationScript) {
-                    console.log(`Migrating database from v${currentDbVersion} to v${nextVersionToApply}...`);
-                    const statements = migrationScript.split(';').filter(s => s.trim().length > 0);
-                    for (const statement of statements) {
-                        try {
-                            console.log("Executing migration statement:", statement);
-                            await txn.executeSql(statement, []);
-                        } catch (e) {
-                            console.error(`Error executing migration SQL statement: ${statement}`, e);
-                            throw e; // Rollback la transaction en cas d'erreur
+                            // Si la base est neuve, appliquer le schéma initial
+                            if (currentDbVersion === 0) {
+                                console.log("Applying initial schema...");
+                                executeSchemaStatements(txn, v0Schema, 0);
+                            } else if (currentDbVersion < DATABASE_VERSION) {
+                                // Appliquer les migrations nécessaires
+                                applyMigrations(txn, currentDbVersion);
+                            } else {
+                                console.log("Database is up to date");
+                            }
+                        },
+                        (txn, error) => {
+                            // Table vide, considérer comme version 0
+                            console.log("Migration table is empty, applying initial schema...");
+                            executeSchemaStatements(txn, v0Schema, 0);
                         }
-                    }
-                    // Mettre à jour la version dans la table de migrations
-                    await txn.executeSql("INSERT INTO _migrations (version) VALUES (?);", [nextVersionToApply]);
-                    currentDbVersion = nextVersionToApply; // Mettre à jour la version actuelle pour la prochaine itération
-                    console.log(`Migrated to v${currentDbVersion} successfully.`);
-                } else {
-                    console.warn(`No migration script found to upgrade from version ${currentDbVersion} to ${nextVersionToApply}. Aborting further migrations.`);
-                    Alert.alert("Avertissement de Migration", `Aucun script de migration trouvé pour passer de la version ${currentDbVersion} à la version ${nextVersionToApply}.`);
-                    break; // Arrêter si un script est manquant
+                    );
+                },
+                (txn, error) => {
+                    console.error("Error creating migration table: ", error);
                 }
-            }
-            console.log("Database migration check completed. Database is up to date.");
+            );
+        },
+        (error) => {
+            console.error("Migration transaction failed: ", error);
+            reject(error);
+        },
+        () => {
+            console.log("Migration completed successfully");
+            resolve();
+        }
+    );
+};
 
-        });
-    } catch (e) {
-        console.error("Error during database migration transaction:", e);
-        Alert.alert("Erreur Fatale de Base de Données", "L'application n'a pas pu migrer la base de données correctement. Veuillez réinstaller l'application.");
-        // Pour un cours, une alerte suffit. En production, cela nécessiterait une gestion d'erreur plus robuste.
+const executeSchemaStatements = (txn, statements, version) => {
+    let currentIndex = 0;
+    
+    const executeNext = () => {
+        if (currentIndex >= statements.length) {
+            // Tous les statements exécutés, marquer la version comme appliquée
+            txn.executeSql(
+                "INSERT OR REPLACE INTO _migrations (version) VALUES (?)",
+                [version],
+                () => {
+                    console.log(`Schema version ${version} applied successfully`);
+                },
+                (txn, error) => {
+                    console.error(`Error marking version ${version} as applied:`, error);
+                }
+            );
+            return;
+        }
+        
+        const statement = statements[currentIndex].trim();
+        if (statement) {
+            txn.executeSql(
+                statement,
+                [],
+                () => {
+                    console.log(`Statement ${currentIndex + 1}/${statements.length} executed`);
+                    currentIndex++;
+                    executeNext();
+                },
+                (txn, error) => {
+                    console.error(`Error executing statement ${currentIndex + 1}:`, error);
+                    console.error("Statement was:", statement);
+                    currentIndex++;
+                    executeNext(); // Continue même en cas d'erreur
+                }
+            );
+        } else {
+            currentIndex++;
+            executeNext();
+        }
+    };
+    
+    executeNext();
+};
+
+const applyMigrations = (txn, currentVersion) => {
+    // Pour les futures migrations
+    for (let version = currentVersion + 1; version <= DATABASE_VERSION; version++) {
+        if (migrationScripts[version]) {
+            executeSchemaStatements(txn, migrationScripts[version], version);
+        }
     }
 };
 
-
-// Expose the database instance directly for transactions in other services
-export const getDb = () => db;
-
-// Export des fonctions de base de données (maintenant via l'instance db)
-export const addDataItem = (name, quantity, description = '') => {
+// Ajouter un opérateur aux favoris
+export const likeOperateur = (operateurData) => {
     return new Promise((resolve, reject) => {
+        if (!db) {
+            reject(new Error("Database not initialized"));
+            return;
+        }
+
+        const nom = operateurData.raisonSociale || operateurData.denominationcourante || "Non spécifié";
+        const adresse = operateurData.adressesOperateurs?.[0] ? 
+            `${operateurData.adressesOperateurs[0].lieu || ''}, ${operateurData.adressesOperateurs[0].ville || ''} ${operateurData.adressesOperateurs[0].codePostal || ''}`.trim() : 
+            "Non spécifiée";
+        const domaineActivite = operateurData.activites?.[0] || "Non spécifié";
+
         db.transaction(txn => {
             txn.executeSql(
-                "INSERT INTO items (name, quantity, description) VALUES (?,?,?)",
-                [name, quantity, description],
+                "INSERT OR REPLACE INTO OperateurLiked (operateur_id, nom, adresse, domaine_activite) VALUES (?,?,?,?)",
+                [operateurData.id, nom, adresse, domaineActivite],
                 (txn, results) => {
-                    if (results.rowsAffected > 0) {
-                        console.log("Item added: ", name);
-                        resolve(true);
-                    } else {
-                        console.log("Failed to add item.");
-                        resolve(false);
-                    }
+                    console.log("Opérateur ajouté aux favoris: ", nom);
+                    resolve(true);
                 },
-                error => {
-                    console.error("Error adding item: ", error);
+                (txn, error) => {
+                    console.error("Erreur lors de l'ajout aux favoris: ", error);
                     reject(error);
                 }
             );
@@ -162,21 +197,83 @@ export const addDataItem = (name, quantity, description = '') => {
     });
 };
 
-export const getItems = () => {
+// Retirer un opérateur des favoris
+export const unlikeOperateur = (operateurId) => {
     return new Promise((resolve, reject) => {
+        if (!db) {
+            reject(new Error("Database not initialized"));
+            return;
+        }
+
         db.transaction(txn => {
             txn.executeSql(
-                "SELECT * FROM items ORDER BY id DESC",
+                "DELETE FROM OperateurLiked WHERE operateur_id = ?",
+                [operateurId],
+                (txn, results) => {
+                    if (results.rowsAffected > 0) {
+                        console.log("Opérateur retiré des favoris: ", operateurId);
+                        resolve(true);
+                    } else {
+                        console.log("Opérateur non trouvé dans les favoris.");
+                        resolve(false);
+                    }
+                },
+                (txn, error) => {
+                    console.error("Erreur lors de la suppression des favoris: ", error);
+                    reject(error);
+                }
+            );
+        });
+    });
+};
+
+// Vérifier si un opérateur est dans les favoris
+export const isOperateurLiked = (operateurId) => {
+    return new Promise((resolve, reject) => {
+        if (!db) {
+            reject(new Error("Database not initialized"));
+            return;
+        }
+
+        db.transaction(txn => {
+            txn.executeSql(
+                "SELECT COUNT(*) as count FROM OperateurLiked WHERE operateur_id = ?",
+                [operateurId],
+                (txn, results) => {
+                    const count = results.rows.item(0).count;
+                    resolve(count > 0);
+                },
+                (txn, error) => {
+                    console.error("Erreur lors de la vérification des favoris: ", error);
+                    reject(error);
+                }
+            );
+        });
+    });
+};
+
+// Récupérer tous les opérateurs likés
+export const getLikedOperateurs = () => {
+    return new Promise((resolve, reject) => {
+        if (!db) {
+            reject(new Error("Database not initialized"));
+            return;
+        }
+
+        db.transaction(txn => {
+            txn.executeSql(
+                "SELECT * FROM OperateurLiked ORDER BY date_ajout DESC",
                 [],
                 (txn, results) => {
-                    let items = [];
+                    let operateurs = [];
                     for (let i = 0; i < results.rows.length; ++i) {
-                        items.push(results.rows.item(i));
+                        operateurs.push(results.rows.item(i));
                     }
-                    resolve(items);
+                    console.log(`Retrieved ${operateurs.length} liked operateurs`);
+                    resolve(operateurs);
                 },
-                error => {
-                    console.error("Error getting items: ", error);
+                (txn, error) => {
+                    console.error("Erreur lors de la récupération des favoris: ", error);
                     reject(error);
                 }
             );
@@ -184,47 +281,24 @@ export const getItems = () => {
     });
 };
 
-export const deleteItem = (id) => {
+// Vider tous les favoris
+export const clearAllLikedOperateurs = () => {
     return new Promise((resolve, reject) => {
-        db.transaction(txn => {
-            txn.executeSql(
-                "DELETE FROM items WHERE id = ?",
-                [id],
-                (txn, results) => {
-                    if (results.rowsAffected > 0) {
-                        console.log("Item deleted: ", id);
-                        resolve(true);
-                    } else {
-                        console.log("Failed to delete item.");
-                        resolve(false);
-                    }
-                },
-                error => {
-                    console.error("Error deleting item: ", error);
-                    reject(error);
-                }
-            );
-        });
-    });
-};
+        if (!db) {
+            reject(new Error("Database not initialized"));
+            return;
+        }
 
-export const clearAllItems = () => {
-    return new Promise((resolve, reject) => {
         db.transaction(txn => {
             txn.executeSql(
-                "DELETE FROM items",
+                "DELETE FROM OperateurLiked",
                 [],
                 (txn, results) => {
-                    if (results.rowsAffected > 0) {
-                        console.log("All items deleted.");
-                        resolve(true);
-                    } else {
-                        console.log("No items to delete.");
-                        resolve(false);
-                    }
+                    console.log("Tous les favoris ont été supprimés.");
+                    resolve(true);
                 },
-                error => {
-                    console.error("Error clearing all items: ", error);
+                (txn, error) => {
+                    console.error("Erreur lors de la suppression de tous les favoris: ", error);
                     reject(error);
                 }
             );
