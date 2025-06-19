@@ -1,9 +1,9 @@
+import 'react-native-gesture-handler';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import React, { useEffect } from 'react';
 import DrawerNavigator from './src/navigations/DrawerNavigator.tsx';
 import { closeDatabase, initDatabase } from './src/services/migrations/index.js';
-
 
 const Tab = createBottomTabNavigator();
 
