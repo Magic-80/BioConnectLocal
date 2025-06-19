@@ -1,65 +1,63 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, Button, FlatList, TextInput, Alert, TouchableOpacity } from 'react-native';
-import { addDataItem, getItems, deleteItem, clearAllItems } from '../services/migrations/index';
+// screens/FavoriteScreen.js
+import React, { useState, useEffect } from 'react';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  FlatList, 
+  Alert, 
+  TouchableOpacity, 
+  RefreshControl,
+  StatusBar
+} from 'react-native';
+import { getLikedOperateurs, unlikeOperateur, clearAllLikedOperateurs } from '../services/migrations/index';
+import OperateurCard from '../components/OperateurCard';
 
 const FavoriteScreen = () => {
-  const [itemName, setItemName] = useState('');
-  const [itemQuantity, setItemQuantity] = useState('');
-  const [items, setItems] = useState([]);
+  const [operateurs, setOperateurs] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const loadItems = useCallback(async () => {
+  // Fonction simple pour charger les opérateurs
+  const loadOperateurs = async () => {
     try {
-      const storedItems = await getItems();
-      setItems(storedItems);
+      const likedOperateurs = await getLikedOperateurs();
+      setOperateurs(likedOperateurs);
     } catch (error) {
-      console.error("Failed to load items:", error);
-      Alert.alert("Erreur", "Impossible de charger les données.");
-    }
-  }, []);
-
-  useEffect(() => {
-    loadItems();
-  }, [loadItems]); 
-
-  const handleAddItem = async () => {
-    if (!itemName || !itemQuantity) {
-      Alert.alert("Erreur", "Veuillez entrer un nom et une quantité.");
-      return;
-    }
-    try {
-      const quantity = parseInt(itemQuantity, 10);
-      if (isNaN(quantity)) {
-        Alert.alert("Erreur", "La quantité doit être un nombre.");
-        return;
-      }
-      await addDataItem(itemName, quantity);
-      setItemName('');
-      setItemQuantity('');
-      loadItems(); // Recharger les données après l'ajout
-    } catch (error) {
-      console.error("Failed to add item:", error);
-      Alert.alert("Erreur", "Impossible d'ajouter l'élément.");
+      console.error("Erreur lors du chargement des opérateurs:", error);
+      Alert.alert("Erreur", "Impossible de charger les opérateurs favoris.");
     }
   };
 
-  const handleDeleteItem = async (id) => {
+  // useEffect simple sans dépendances
+  useEffect(() => {
+    loadOperateurs();
+  }, []); // Tableau vide pour éviter les boucles
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadOperateurs();
+    setRefreshing(false);
+  };
+
+  const handleDeleteOperateur = (operateurId) => {
     Alert.alert(
-      "Supprimer l'élément",
-      "Êtes-vous sûr de vouloir supprimer cet élément ?",
+      "Retirer des favoris",
+      "Voulez-vous retirer cet opérateur de vos favoris ?",
       [
+        { text: "Annuler", style: "cancel" },
         {
-          text: "Annuler",
-          style: "cancel"
-        },
-        {
-          text: "Supprimer",
+          text: "Retirer",
           onPress: async () => {
             try {
-              await deleteItem(id);
-              loadItems(); // Recharger les données après la suppression
+              const success = await unlikeOperateur(operateurId);
+              if (success) {
+                loadOperateurs();
+              } else {
+                Alert.alert("Erreur", "Impossible de retirer cet opérateur des favoris.");
+              }
             } catch (error) {
-              console.error("Failed to delete item:", error);
-              Alert.alert("Erreur", "Impossible de supprimer l'élément.");
+              console.error("Erreur lors de la suppression:", error);
+              Alert.alert("Erreur", "Une erreur est survenue lors de la suppression.");
             }
           },
           style: "destructive"
@@ -68,24 +66,21 @@ const FavoriteScreen = () => {
     );
   };
 
-  const handleClearAllItems = async () => {
+  const handleClearAll = () => {
     Alert.alert(
-      "Vider la base de données",
-      "Êtes-vous sûr de vouloir supprimer TOUS les éléments ?",
+      "Vider tous les favoris",
+      "Êtes-vous sûr de vouloir retirer TOUS les opérateurs de vos favoris ?",
       [
+        { text: "Annuler", style: "cancel" },
         {
-          text: "Annuler",
-          style: "cancel"
-        },
-        {
-          text: "Vider",
+          text: "Tout vider",
           onPress: async () => {
             try {
-              await clearAllItems();
-              loadItems(); // Recharger les données après le vidage
+              await clearAllLikedOperateurs();
+              loadOperateurs();
             } catch (error) {
-              console.error("Failed to clear items:", error);
-              Alert.alert("Erreur", "Impossible de vider la base de données.");
+              console.error("Erreur lors du vidage:", error);
+              Alert.alert("Erreur", "Impossible de vider les favoris.");
             }
           },
           style: "destructive"
@@ -95,46 +90,68 @@ const FavoriteScreen = () => {
   };
 
   const renderItem = ({ item }) => (
-    <View style={styles.itemContainer}>
-      <Text style={styles.itemText}>ID: {item.id}, Nom: {item.name}, Quantité: {item.quantity}</Text>
-      <TouchableOpacity onPress={() => handleDeleteItem(item.id)} style={styles.deleteButton}>
-        <Text style={styles.deleteButtonText}>X</Text>
-      </TouchableOpacity>
+    <OperateurCard 
+      operateur={item} 
+      onDelete={handleDeleteOperateur}
+    />
+  );
+
+  const EmptyComponent = () => (
+    <View style={styles.emptyState}>
+      <Text style={styles.emptyIcon}>🌱💚</Text>
+      <Text style={styles.emptyTitle}>Votre jardin de favoris est vide</Text>
+      <Text style={styles.emptyText}>
+        Découvrez des opérateurs bio près de chez vous et ajoutez-les à vos favoris.
+      </Text>
+      <View style={styles.emptyHint}>
+        <Text style={styles.emptyHintText}>
+          💡 Utilisez l'onglet recherche pour explorer
+        </Text>
+      </View>
     </View>
   );
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Gestion des données internes</Text>
+      <StatusBar barStyle="light-content" backgroundColor="#2E7D32" />
+      
+      {/* Header simplifié */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerEmoji}>💚</Text>
+          <View style={styles.titleContainer}>
+            <Text style={styles.title}>Mes Favoris</Text>
+            <Text style={styles.subtitle}>
+              {operateurs.length} opérateur{operateurs.length !== 1 ? 's' : ''}
+            </Text>
+          </View>
+        </View>
+      </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Nom de l'élément"
-        value={itemName}
-        onChangeText={setItemName}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Quantité"
-        keyboardType="numeric"
-        value={itemQuantity}
-        onChangeText={setItemQuantity}
-      />
-      <Button title="Ajouter un élément" onPress={handleAddItem} />
-
-      <Button title="Vider tout" onPress={handleClearAllItems} color="red" />
-
-      <Text style={styles.listTitle}>Liste des éléments :</Text>
-      {items.length > 0 ? (
-        <FlatList
-          data={items}
-          renderItem={renderItem}
-          keyExtractor={item => item.id.toString()}
-          style={styles.list}
-        />
-      ) : (
-        <Text>Aucun élément trouvé.</Text>
+      {/* Bouton clear si il y a des favoris */}
+      {operateurs.length > 0 && (
+        <TouchableOpacity style={styles.clearButton} onPress={handleClearAll}>
+          <Text style={styles.clearButtonText}>🗑️ Vider mes favoris</Text>
+        </TouchableOpacity>
       )}
+
+      {/* Liste */}
+      <FlatList
+        data={operateurs}
+        renderItem={renderItem}
+        keyExtractor={(item) => `operateur-${item.operateur_id}`}
+        contentContainerStyle={styles.listContainer}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh}
+            colors={['#4CAF50']}
+            tintColor={'#4CAF50'}
+          />
+        }
+        ListEmptyComponent={EmptyComponent}
+        showsVerticalScrollIndicator={false}
+      />
     </View>
   );
 };
@@ -142,57 +159,90 @@ const FavoriteScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    backgroundColor: '#f8f9fa',
+  },
+  header: {
+    backgroundColor: '#4CAF50',
+    paddingTop: 50,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+  },
+  headerContent: {
+    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+  },
+  headerEmoji: {
+    fontSize: 32,
+    marginRight: 12,
+  },
+  titleContainer: {
+    flex: 1,
   },
   title: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
+    color: '#fff',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#E8F5E8',
+  },
+  clearButton: {
+    backgroundColor: '#FFEBEE',
+    margin: 16,
+    padding: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#FFCDD2',
+  },
+  clearButtonText: {
+    color: '#D32F2F',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  listContainer: {
+    padding: 16,
+    flexGrow: 1,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  emptyIcon: {
+    fontSize: 64,
     marginBottom: 20,
   },
-  input: {
-    width: '90%',
-    borderColor: '#ccc',
-    borderWidth: 1,
-    padding: 10,
-    marginBottom: 10,
-    borderRadius: 5,
-  },
-  listTitle: {
-    fontSize: 18,
+  emptyTitle: {
+    fontSize: 22,
     fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 10,
+    color: '#2E7D32',
+    marginBottom: 16,
+    textAlign: 'center',
   },
-  list: {
-    width: '100%',
-  },
-  itemContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#e0e0e0',
-    padding: 10,
-    marginVertical: 5,
-    borderRadius: 5,
-    width: '100%',
-  },
-  itemText: {
-    flex: 1,
+  emptyText: {
     fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 24,
   },
-  deleteButton: {
-    backgroundColor: 'red',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 5,
-    marginLeft: 10,
+  emptyHint: {
+    backgroundColor: '#E8F5E8',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#4CAF50',
   },
-  deleteButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+  emptyHintText: {
+    fontSize: 14,
+    color: '#2E7D32',
+    textAlign: 'center',
   },
 });
 
 export default FavoriteScreen;
+
