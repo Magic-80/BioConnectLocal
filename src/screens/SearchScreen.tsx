@@ -38,7 +38,7 @@ const SearchScreen = () => {
         const response = await axios.get('https://opendata.agencebio.org/api/gouv/operateurs', {
           params: {
             q: searchQuery || 'boulangerie',
-            nb: 50,
+            nb: 30,
             debut: 0
           }
         });
@@ -76,7 +76,6 @@ const SearchScreen = () => {
         id: `${item.numeroBio}-${index}`,
         position: { lat: item.adressesOperateurs[0].lat, lng: item.adressesOperateurs[0].long },
         icon: 'https://cdn-icons-png.flaticon.com/64/2776/2776067.png',
-        title: item.productions[0].nom || 'Productions',
       }));
 
     console.log('Markers:', initialMakers);
@@ -139,15 +138,15 @@ const SearchScreen = () => {
         keyExtractor={(item, index) => `${item.numeroBio || index}`}
         renderItem={({ item }) => {
           const operateurData = {
-            nom: item.raisonSociale || item.denominationcourante || 'Nom non disponible',
-            domaine_activite: item.activites?.[0]?.nom || item.productions?.[0]?.nom || 'Activité non spécifiée',
+            operateur_id: item.numeroBio?.toString() || '',
+            name: item.raisonSociale || item.denominationcourante || 'Nom non disponible',
+            domaine_activite: 'Activité non spécifiée',
             adresse: (() => {
               const adresse = item.adressesOperateurs?.[0];
               if (!adresse) return 'Adresse non disponible';
               return `${adresse.lieu || ''} ${adresse.codePostal || ''} ${adresse.ville || ''}`.trim();
             })(),
             date_ajout: item.dateMaj || new Date().toISOString(),
-            operateur_id: item.numeroBio?.toString() || '',
           };
 
           return (

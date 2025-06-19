@@ -59,7 +59,7 @@ const OperateurCard = ({ operateur, onDelete }) => {
           </View>
           <View style={styles.headerContent}>
             <Text style={styles.operatorName} numberOfLines={2}>
-              {operateur.nom}
+              {operateur.name}
             </Text>
             <View style={styles.activityBadge}>
               <Text style={styles.activityText}>
