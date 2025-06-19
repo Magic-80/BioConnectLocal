@@ -13,6 +13,7 @@ const TabContainer = () => {
       screenOptions={({ route }) => ({
         tabBarActiveTintColor: '#2E7D32',
         tabBarInactiveTintColor: 'gray',
+        headerShown: false,
       })}
     >
       <Tab.Screen name="Home" component={Home} />
