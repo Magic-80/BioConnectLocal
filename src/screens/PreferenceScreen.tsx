@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+// import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const PreferenceScreen = () => {
   const [defaultAddress, setDefaultAddress] = useState('');
@@ -18,25 +18,25 @@ const PreferenceScreen = () => {
   const [magasinSpecialise, setMagasinSpecialise] = useState(true);
   const [grossiste, setGrossiste] = useState(false);
 
-  useEffect(() => {
-    loadPreferences();
-  }, []);
+  // useEffect(() => {
+  //   loadPreferences();
+  // }, []);
 
-  const loadPreferences = async () => {
-    try {
-      const prefs = await AsyncStorage.getItem('preferences');
-      if (prefs) {
-        const data = JSON.parse(prefs);
-        setDefaultAddress(data.defaultAddress || '');
-        setRadius(data.radius || '10');
-        setVenteDirecte(data.venteDirecte ?? true);
-        setMagasinSpecialise(data.magasinSpecialise ?? true);
-        setGrossiste(data.grossiste ?? false);
-      }
-    } catch (error) {
-      console.log('Erreur chargement:', error);
-    }
-  };
+  // const loadPreferences = async () => {
+  //   try {
+  //     const prefs = await AsyncStorage.getItem('preferences');
+  //     if (prefs) {
+  //       const data = JSON.parse(prefs);
+  //       setDefaultAddress(data.defaultAddress || '');
+  //       setRadius(data.radius || '10');
+  //       setVenteDirecte(data.venteDirecte ?? true);
+  //       setMagasinSpecialise(data.magasinSpecialise ?? true);
+  //       setGrossiste(data.grossiste ?? false);
+  //     }
+  //   } catch (error) {
+  //     console.log('Erreur chargement:', error);
+  //   }
+  // };
 
   const savePreferences = async () => {
     try {
@@ -47,7 +47,7 @@ const PreferenceScreen = () => {
         magasinSpecialise,
         grossiste,
       };
-      await AsyncStorage.setItem('preferences', JSON.stringify(prefs));
+      // await AsyncStorage.setItem('preferences', JSON.stringify(prefs));
       Alert.alert('Succès', 'Préférences sauvegardées !');
     } catch (error) {
       Alert.alert('Erreur', 'Impossible de sauvegarder');

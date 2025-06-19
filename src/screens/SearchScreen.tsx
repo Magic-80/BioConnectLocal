@@ -38,7 +38,7 @@ const SearchScreen = () => {
         const response = await axios.get('https://opendata.agencebio.org/api/gouv/operateurs', {
           params: {
             q: searchQuery || 'boulangerie',
-            nb: 30,
+            nb: 500,
             debut: 0
           }
         });
@@ -140,7 +140,7 @@ const SearchScreen = () => {
           const operateurData = {
             operateur_id: item.numeroBio?.toString() || '',
             name: item.raisonSociale || item.denominationcourante || 'Nom non disponible',
-            domaine_activite: 'Activité non spécifiée',
+            domaine_activite: item.activites?.[0]?.nom || item.productions?.[0]?.nom || 'Activité non spécifiée',
             adresse: (() => {
               const adresse = item.adressesOperateurs?.[0];
               if (!adresse) return 'Adresse non disponible';
