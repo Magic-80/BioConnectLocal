@@ -33,7 +33,7 @@ const FavoriteScreen = () => {
 
   useEffect(() => {
     loadOperateurs();
-  }, []);
+  }, [operateurs]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -41,37 +41,15 @@ const FavoriteScreen = () => {
     setRefreshing(false);
   };
 
-  const handleDeleteOperateur = operateurId => {
-    Alert.alert(
-      'Retirer des favoris',
-      'Voulez-vous retirer cet opérateur de vos favoris ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Retirer',
-          onPress: async () => {
-            try {
-              const success = await unlikeOperateur(operateurId);
-              if (success) {
-                loadOperateurs();
-              } else {
-                Alert.alert(
-                  'Erreur',
-                  'Impossible de retirer cet opérateur des favoris.',
-                );
-              }
-            } catch (error) {
-              console.error('Erreur lors de la suppression:', error);
-              Alert.alert(
-                'Erreur',
-                'Une erreur est survenue lors de la suppression.',
-              );
-            }
-          },
-          style: 'destructive',
-        },
-      ],
-    );
+  const handleDeleteOperateur = async (operateurId) => {
+    try {
+      const success = await unlikeOperateur(operateurId);
+      if (success) {
+        loadOperateurs();
+      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+    }
   };
 
   const handleClearAll = () => {
@@ -98,7 +76,17 @@ const FavoriteScreen = () => {
   };
 
   const renderItem = ({ item }) => (
-    <OperateurCard operateur={item} onDelete={handleDeleteOperateur} />
+    <OperateurCard 
+      operateur={item} 
+      onDelete={handleDeleteOperateur}
+      showFromFavorites={true}
+      onLikeChange={(operateurId, isLiked) => {
+        if (!isLiked) {
+          // L'opérateur a été retiré des favoris, recharger la liste
+          loadOperateurs();
+        }
+      }}
+    />
   );
 
   const EmptyComponent = () => (
