@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -30,6 +31,13 @@ const SearchScreen = () => {
   const [editVisibility, setEditVisibility] = useState(false);
   const [selectedOperateur, setSelectedOperateur] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      setRefreshKey(prev => prev + 1);
+    }, [])
+  );
 
   useEffect(() => {
     const fetchOperateurs = async () => {
@@ -121,7 +129,7 @@ const SearchScreen = () => {
         </View>
       );
     }
-
+  
     if (error) {
       return (
         <View style={[styles.contentContainer, styles.centered]}>
@@ -135,7 +143,7 @@ const SearchScreen = () => {
         </View>
       );
     }
-
+  
     if (searchQuery.trim() === '') {
       return (
         <LeafletView
@@ -147,11 +155,11 @@ const SearchScreen = () => {
         />
       );
     }
-
+  
     return (
       <FlatList
         data={operateurs}
-        keyExtractor={(item, index) => `${item.numeroBio || index}`}
+        keyExtractor={(item, index) => `${item.numeroBio || index}-${refreshKey}`} 
         renderItem={({ item }) => {
           const operateurData = {
             operateur_id: item.numeroBio?.toString() || '',
@@ -171,10 +179,21 @@ const SearchScreen = () => {
             })(),
             date_ajout: item.dateMaj || new Date().toISOString(),
           };
-
+  
           return (
-            <TouchableOpacity onPress={() => handleEdit(item)}>
-              <OperateurCard operateur={operateurData} onDelete={() => { }} />
+            <TouchableOpacity 
+              onPress={() => handleEdit(item)}
+              key={`${item.numeroBio}-${refreshKey}`} 
+            >
+              <OperateurCard 
+                operateur={operateurData} 
+                onDelete={() => {}} 
+                showFromFavorites={false}
+                refreshKey={refreshKey} 
+                onLikeChange={(operateurId, isLiked) => {
+                  console.log(`Opérateur ${operateurId} ${isLiked ? 'ajouté aux' : 'retiré des'} favoris`);
+                }}
+              />
             </TouchableOpacity>
           );
         }}
@@ -190,6 +209,7 @@ const SearchScreen = () => {
           </View>
         }
         showsVerticalScrollIndicator={false}
+        extraData={refreshKey}
       />
     );
   };

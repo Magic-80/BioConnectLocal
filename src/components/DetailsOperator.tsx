@@ -1,5 +1,12 @@
 import React from 'react';
-import { Modal, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+    Modal,
+    View,
+    Text,
+    StyleSheet,
+    TouchableOpacity,
+    ScrollView,
+} from 'react-native';
 
 const DetailsOperator = ({ visible, onClose, operateur }) => {
     if (!operateur) return null;
@@ -12,16 +19,36 @@ const DetailsOperator = ({ visible, onClose, operateur }) => {
             onRequestClose={onClose}
         >
             <View style={styles.overlay}>
-                <View style={styles.modalContainer}>
-                    <Text style={styles.title}>{operateur.nom}</Text>
-                    <Text style={styles.label}>Activité:</Text>
-                    <Text style={styles.value}>{operateur.domaine_activite}</Text>
-                    <Text style={styles.label}>Adresse:</Text>
-                    <Text style={styles.value}>{operateur.adresse || 'Adresse non spécifiée'}</Text>
-                    <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                        <Text style={styles.closeText}>Fermer</Text>
-                    </TouchableOpacity>
-                </View>
+                <ScrollView
+                    contentContainerStyle={styles.scrollContainer}
+                    showsVerticalScrollIndicator={false}
+                >
+                    <View style={styles.modalContainer}>
+                        <Text style={styles.title}>{operateur.nom}</Text>
+
+                        <Text style={styles.label}>Activité:</Text>
+                        <Text style={styles.value}>{operateur.domaine_activite || 'Activité non spécifiée'}</Text>
+
+                        <Text style={styles.label}>Produits:</Text>
+                        <Text style={styles.value}>{operateur.productions || 'Produits non spécifiés'}</Text>
+
+                        <Text style={styles.label}>SIRET:</Text>
+                        <Text style={styles.value}>{operateur.siret || 'SIRET non spécifié'}</Text>
+
+                        <Text style={styles.label}>Numéro BIO:</Text>
+                        <Text style={styles.value}>{operateur.numeroBio || 'Numéro BIO non spécifié'}</Text>
+
+                        <Text style={styles.label}>Tel:</Text>
+                        <Text style={styles.value}>{operateur.telephone || 'Tél non spécifié'}</Text>
+
+                        <Text style={styles.label}>Adresse:</Text>
+                        <Text style={styles.value}>{operateur.adresse || 'Adresse non spécifiée'}</Text>
+
+                        <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                            <Text style={styles.closeText}>Fermer</Text>
+                        </TouchableOpacity>
+                    </View>
+                </ScrollView>
             </View>
         </Modal>
     );
@@ -30,8 +57,11 @@ const DetailsOperator = ({ visible, onClose, operateur }) => {
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        justifyContent: 'center',
         backgroundColor: 'rgba(0,0,0,0.4)',
+    },
+    scrollContainer: {
+        flexGrow: 1,
+        justifyContent: 'center',
         padding: 20,
     },
     modalContainer: {

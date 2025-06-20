@@ -15,13 +15,7 @@ const v0Schema = [
         adresse TEXT,
         domaine_activite TEXT,
         date_ajout DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`,
-    `INSERT OR IGNORE INTO OperateurLiked (operateur_id, nom, adresse, domaine_activite) 
-     VALUES (1, 'BioFerme', '123 rue de la Bio, Paris 75001', 'Maraîchage')`,
-    `INSERT OR IGNORE INTO OperateurLiked (operateur_id, nom, adresse, domaine_activite) 
-     VALUES (2, 'Les Vergers du Sud', '45 avenue des Fruits, Marseille 13001', 'Arboriculture')`,
-    `INSERT OR IGNORE INTO OperateurLiked (operateur_id, nom, adresse, domaine_activite) 
-     VALUES (3, 'Céréales & Co', '78 route des Champs, Lyon 69001', 'Céréaliculture')`
+    )`
 ];
 
 const migrationScripts = {
@@ -178,7 +172,7 @@ export const likeOperateur = (operateurData) => {
         const adresse = operateurData.adressesOperateurs?.[0] ? 
             `${operateurData.adressesOperateurs[0].lieu || ''}, ${operateurData.adressesOperateurs[0].ville || ''} ${operateurData.adressesOperateurs[0].codePostal || ''}`.trim() : 
             "Non spécifiée";
-        const domaineActivite = operateurData.activites?.[0] || "Non spécifié";
+        const domaineActivite = operateurData.activites?.[0]?.nom || "Non spécifié";
 
         db.transaction(txn => {
             txn.executeSql(
