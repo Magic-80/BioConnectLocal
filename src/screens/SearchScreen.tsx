@@ -14,6 +14,8 @@ import axios from 'axios';
 import { LeafletView } from 'react-native-leaflet-view';
 import OperateurCard from '../components/OperateurCard';
 import SearchSvg from '../assets/images/search';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Geolocation from 'react-native-geolocation-service';
 
 let defaultLocation = {
   lat: 48.8566,
@@ -32,20 +34,27 @@ const SearchScreen = () => {
   useEffect(() => {
     const fetchOperateurs = async () => {
       try {
+        const prefs = await AsyncStorage.getItem('preferences');
+        if (prefs) {
+          const data = JSON.parse(prefs);
+        }
         setLoading(true);
-
         const response = await axios.get(
           'https://opendata.agencebio.org/api/gouv/operateurs',
           {
             params: {
-              q: searchQuery || 'boulangerie',
-              nb: 300,
+              q: searchQuery,
+              nb: 1000,
               debut: 0,
+              filtrerGrossistes:0,
+              filtrerVenteDetail: 0,
+              filtrerRestaurants: 0,
+              filtrerMagasinSpec: 0,
             },
           },
         );
-
         const operateurs = response.data?.items || [];
+
         setOperateurs(operateurs);
         setLoading(false);
       } catch (error) {
@@ -94,7 +103,9 @@ const SearchScreen = () => {
 
   const handleMarker = (message: any) => {
     if (message.event === 'onMapMarkerClicked') {
-      const operateur = operateurs.find((operateur) => operateur.numeroBio === message.payload.mapMarkerID);
+      const operateur = operateurs.find(
+        operateur => operateur.numeroBio === message.payload.mapMarkerID,
+      );
       if (operateur) {
         handleEdit(operateur);
       }

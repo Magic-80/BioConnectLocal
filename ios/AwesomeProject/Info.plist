@@ -33,6 +33,11 @@
 		<true/>
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Votre application a besoin de votre position pour fournir des services basés sur la localisation.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Votre application a besoin de votre position en tout temps pour fournir des services basés sur la localisation.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Votre application a besoin de votre position en tout temps pour fournir des services basés sur la localisation.</string>
 	<string></string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
