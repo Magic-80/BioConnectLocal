@@ -76,7 +76,7 @@ const SearchScreen = () => {
           item.adressesOperateurs?.[0]?.long,
       )
       .map((item, index) => ({
-        id: `${item.numeroBio}-${index}`,
+        id: item.numeroBio,
         position: {
           lat: item.adressesOperateurs[0].lat,
           lng: item.adressesOperateurs[0].long,
@@ -94,10 +94,7 @@ const SearchScreen = () => {
 
   const handleMarker = (message: any) => {
     if (message.event === 'onMapMarkerClicked') {
-      const operateur = operateurs.find(
-        (operateur, index) =>
-          `${operateur.numeroBio}-${index}` === message.payload.mapMarkerID,
-      );
+      const operateur = operateurs.find((operateur) => operateur.numeroBio === message.payload.mapMarkerID);
       if (operateur) {
         handleEdit(operateur);
       }
@@ -158,16 +155,15 @@ const SearchScreen = () => {
             adresse: (() => {
               const adresse = item.adressesOperateurs?.[0];
               if (!adresse) return 'Adresse non disponible';
-              return `${adresse.lieu || ''} ${adresse.codePostal || ''} ${
-                adresse.ville || ''
-              }`.trim();
+              return `${adresse.lieu || ''} ${adresse.codePostal || ''} ${adresse.ville || ''
+                }`.trim();
             })(),
             date_ajout: item.dateMaj || new Date().toISOString(),
           };
 
           return (
             <TouchableOpacity onPress={() => handleEdit(item)}>
-              <OperateurCard operateur={operateurData} onDelete={() => {}} />
+              <OperateurCard operateur={operateurData} onDelete={() => { }} />
             </TouchableOpacity>
           );
         }}
@@ -256,9 +252,8 @@ const SearchScreen = () => {
               {(() => {
                 const adresse = selectedOperateur?.adressesOperateurs?.[0];
                 if (!adresse) return 'Non spécifié';
-                return `${adresse.lieu || ''} ${adresse.codePostal || ''} ${
-                  adresse.ville || ''
-                }`.trim();
+                return `${adresse.lieu || ''} ${adresse.codePostal || ''} ${adresse.ville || ''
+                  }`.trim();
               })()}
             </Text>
 
