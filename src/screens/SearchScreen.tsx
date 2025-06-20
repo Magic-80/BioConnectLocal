@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
@@ -34,10 +34,16 @@ const SearchScreen = () => {
   const [refreshKey, setRefreshKey] = useState(0);
 
   useFocusEffect(
-    React.useCallback(() => {
-      setRefreshKey(prev => prev + 1);
-    }, [])
-  );
+  useCallback(() => {
+    // Ce code s'exécute à chaque fois que l'écran devient actif
+    setRefreshKey(prev => prev + 1)
+
+    // Optionnel : nettoyage
+    return () => {
+      // cleanup
+    };
+  }, [])
+);
 
   useEffect(() => {
     const fetchOperateurs = async () => {
@@ -52,7 +58,7 @@ const SearchScreen = () => {
           {
             params: {
               q: searchQuery,
-              nb: 1000,
+              nb: 500,
               debut: 0,
               filtrerGrossistes:0,
               filtrerVenteDetail: 0,
@@ -190,9 +196,7 @@ const SearchScreen = () => {
                 onDelete={() => {}} 
                 showFromFavorites={false}
                 refreshKey={refreshKey} 
-                onLikeChange={(operateurId, isLiked) => {
-                  console.log(`Opérateur ${operateurId} ${isLiked ? 'ajouté aux' : 'retiré des'} favoris`);
-                }}
+                onLikeChange={() => {}}
               />
             </TouchableOpacity>
           );

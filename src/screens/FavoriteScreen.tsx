@@ -41,12 +41,10 @@ const FavoriteScreen = () => {
     setRefreshing(false);
   };
 
-  const handleDeleteOperateur = async (operateurId) => {
+  const handleDeleteFavoris = async (operateurId) => {
     try {
-      const success = await unlikeOperateur(operateurId);
-      if (success) {
-        loadOperateurs();
-      }
+      await unlikeOperateur(operateurId);
+      loadOperateurs();
     } catch (error) {
       console.error('Erreur lors de la suppression:', error);
     }
@@ -78,12 +76,11 @@ const FavoriteScreen = () => {
   const renderItem = ({ item }) => (
     <OperateurCard 
       operateur={item} 
-      onDelete={handleDeleteOperateur}
+      onDelete={handleDeleteFavoris}
       showFromFavorites={true}
-      onLikeChange={(operateurId, isLiked) => {
+      onLikeChange={(isLiked) => {
         if (!isLiked) {
-          // L'opérateur a été retiré des favoris, recharger la liste
-          loadOperateurs();
+          onRefresh();
         }
       }}
     />

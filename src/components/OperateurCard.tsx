@@ -4,15 +4,11 @@ import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native
 import { isOperateurLiked, likeOperateur, unlikeOperateur } from '../services/migrations/index'; 
 import DetailsOperator from './DetailsOperator';
 
+
 const OperateurCard = ({ operateur, onDelete, onLikeChange, showFromFavorites = false, refreshKey }) => {
   const scaleAnim = new Animated.Value(1);
   const [modalVisible, setModalVisible] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  useEffect(() => {
-    checkIfLiked();
-  }, [operateur.operateur_id, refreshKey]); 
 
   const checkIfLiked = async () => {
     try {
@@ -22,6 +18,10 @@ const OperateurCard = ({ operateur, onDelete, onLikeChange, showFromFavorites = 
       console.error('Erreur lors de la vérification du like:', error);
     }
   };
+
+  useEffect(() => {
+    checkIfLiked();
+  }, [refreshKey]);  
 
   const onPressIn = () => {
     Animated.spring(scaleAnim, {
@@ -38,24 +38,19 @@ const OperateurCard = ({ operateur, onDelete, onLikeChange, showFromFavorites = 
   };
 
   const handleLikeToggle = async () => {
-    if (isProcessing) return;
-    
-    setIsProcessing(true);
     try {
       if (isLiked) {
-        // Retirer des favoris
         const success = await unlikeOperateur(operateur.operateur_id);
         if (success) {
           setIsLiked(false);
           if (showFromFavorites && onDelete) {
-            onDelete(operateur.operateur_id);
+            onDelete(operateur.operateur_id); 
           }
           if (onLikeChange) {
-            onLikeChange(operateur.operateur_id, false);
+            onLikeChange(operateur.operateur_id, true);
           }
         }
       } else {
-        // Ajouter aux favoris
         const operateurForDb = {
           id: operateur.operateur_id,
           raisonSociale: operateur.nom,
@@ -78,12 +73,8 @@ const OperateurCard = ({ operateur, onDelete, onLikeChange, showFromFavorites = 
       }
     } catch (error) {
       console.error('Erreur lors du toggle like:', error);
-    } finally {
-      setIsProcessing(false);
-    }
+    } 
   };
-
-  const getActivityIcon = '🌱';
 
   return (
     <Animated.View
@@ -104,7 +95,7 @@ const OperateurCard = ({ operateur, onDelete, onLikeChange, showFromFavorites = 
         <View style={styles.cardHeader}>
           <View style={styles.iconContainer}>
             <Text style={styles.activityIcon}>
-              {getActivityIcon}
+              🌱
             </Text>
           </View>
           <View style={styles.headerContent}>
@@ -123,11 +114,9 @@ const OperateurCard = ({ operateur, onDelete, onLikeChange, showFromFavorites = 
               isLiked && styles.favoriteButtonLiked
             ]}
             onPress={handleLikeToggle}
-            disabled={isProcessing}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Text style={styles.favoriteIcon}>
-              {isProcessing ? '⏳' : isLiked ? '💚' : '🤍'}
+              {isLiked ? '💚' : '🤍'}
             </Text>
           </TouchableOpacity>
         </View>
